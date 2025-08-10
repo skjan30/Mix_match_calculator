@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>VEX IQ Mix & Match Score Calculator</title>
+  <title>VEX IQ Mix & Match Score Calculator with Digital Field</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      max-width: 400px;
+      max-width: 600px;
       margin: 2rem auto;
       padding: 1rem;
       background: #f0f4f8;
@@ -49,51 +49,159 @@
       text-align: center;
       color: #333;
     }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      border-bottom: 2px solid #007acc;
+      margin-bottom: 1rem;
+      cursor: pointer;
+    }
+    .tab {
+      padding: 0.75rem 1.5rem;
+      background: #d9e9ff;
+      color: #007acc;
+      font-weight: bold;
+      border-top-left-radius: 6px;
+      border-top-right-radius: 6px;
+      margin-right: 0.5rem;
+      user-select: none;
+    }
+    .tab.active {
+      background: white;
+      border: 2px solid #007acc;
+      border-bottom: none;
+      color: #004a8f;
+    }
+    .tabContent {
+      display: none;
+      background: white;
+      padding: 1rem;
+      border: 2px solid #007acc;
+      border-top: none;
+      border-radius: 0 0 6px 6px;
+    }
+    .tabContent.active {
+      display: block;
+    }
+
+    /* Digital field */
+    #digitalField {
+      display: grid;
+      grid-template-columns: repeat(6, 40px);
+      grid-template-rows: repeat(4, 40px);
+      gap: 8px;
+      justify-content: center;
+      margin-top: 1rem;
+    }
+    .pin {
+      width: 40px;
+      height: 40px;
+      background-color: #007acc;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 0 0 5px #005fa3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      user-select: none;
+      transition: background-color 0.3s ease;
+    }
+    .pin.grabbed {
+      background-color: #ffa500;
+      box-shadow: 0 0 10px #cc8400;
+    }
+    #fieldScore {
+      margin-top: 1rem;
+      font-size: 1.2rem;
+      font-weight: bold;
+      text-align: center;
+      color: #007acc;
+    }
+
+    /* Scroll for history in smaller view */
+    #scoreHistory ul {
+      padding-left: 1.2rem;
+      margin-top: 0.3rem;
+    }
+
   </style>
 </head>
 <body>
+
   <h2>VEX IQ Mix & Match Score Calculator</h2>
 
-  <label>
-    Number of objects in small goal (1 point each):
-    <input type="number" id="smallGoalCount" min="0" value="0" />
-  </label>
+  <div class="tabs">
+    <div class="tab active" data-tab="calculatorTab">Score Calculator</div>
+    <div class="tab" data-tab="digitalTab">Digital Field</div>
+  </div>
 
-  <label>
-    Number of objects in tall goal (3 points each):
-    <input type="number" id="tallGoalCount" min="0" value="0" />
-  </label>
+  <!-- Score Calculator Tab -->
+  <div id="calculatorTab" class="tabContent active">
+    <label>
+      Number of objects in small goal (1 point each):
+      <input type="number" id="smallGoalCount" min="0" value="0" />
+    </label>
 
-  <label>
-    Number of 3-color stacks (5 points each):
-    <input type="number" id="threeColorStacks" min="0" value="0" />
-  </label>
+    <label>
+      Number of objects in tall goal (3 points each):
+      <input type="number" id="tallGoalCount" min="0" value="0" />
+    </label>
 
-  <label>
-    Number of 2-color stacks (3 points each):
-    <input type="number" id="twoColorStacks" min="0" value="0" />
-  </label>
+    <label>
+      Number of 3-color stacks (5 points each):
+      <input type="number" id="threeColorStacks" min="0" value="0" />
+    </label>
 
-  <label>
-    Number of stack bonuses (2 points each):
-    <input type="number" id="stackBonusCount" min="0" value="0" />
-  </label>
+    <label>
+      Number of 2-color stacks (3 points each):
+      <input type="number" id="twoColorStacks" min="0" value="0" />
+    </label>
 
-  <label style="margin-top: 1rem;">
-    <input type="checkbox" id="autoBonus" />
-    Autonomous Bonus (10 points)
-  </label>
+    <label>
+      Number of stack bonuses (2 points each):
+      <input type="number" id="stackBonusCount" min="0" value="0" />
+    </label>
 
-  <button id="calculateBtn">Calculate Score</button>
+    <label style="margin-top: 1rem;">
+      <input type="checkbox" id="autoBonus" />
+      Autonomous Bonus (10 points)
+    </label>
 
-  <div id="result" style="margin-top:1.5rem; font-size:1.3rem; font-weight:bold; color:#007acc;"></div>
+    <button id="calculateBtn">Calculate Score</button>
 
-  <div id="scoreHistory">
-    <h3>Score History:</h3>
-    <ul id="historyList"></ul>
+    <div id="result" style="margin-top:1.5rem; font-size:1.3rem; font-weight:bold; color:#007acc;"></div>
+
+    <div id="scoreHistory">
+      <h3>Score History:</h3>
+      <ul id="historyList"></ul>
+    </div>
+  </div>
+
+  <!-- Digital Field Tab -->
+  <div id="digitalTab" class="tabContent">
+    <p>Click pins to "grab" or "release" them. Each grabbed pin is worth 1 point.</p>
+    <div id="digitalField"></div>
+    <div id="fieldScore">Current Field Score: 0</div>
+    <button id="resetFieldBtn" style="background:#e74c3c; margin-top:1rem;">Reset Field</button>
   </div>
 
   <script>
+    // Tab switching logic
+    const tabs = document.querySelectorAll('.tab');
+    const tabContents = document.querySelectorAll('.tabContent');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        tabContents.forEach(c => c.classList.remove('active'));
+        document.getElementById(tab.getAttribute('data-tab')).classList.add('active');
+      });
+    });
+
+    // Score calculator logic (existing)
     const calculateBtn = document.getElementById('calculateBtn');
     const resultDiv = document.getElementById('result');
     const historyList = document.getElementById('historyList');
@@ -144,6 +252,51 @@
         historyList.appendChild(li);
       });
     }
+
+    // Digital Field Logic
+    const digitalField = document.getElementById('digitalField');
+    const fieldScoreDisplay = document.getElementById('fieldScore');
+    const resetFieldBtn = document.getElementById('resetFieldBtn');
+
+    // Create 24 pins (6 cols x 4 rows)
+    const totalPins = 24;
+    let pinStates = new Array(totalPins).fill(false); // false = not grabbed, true = grabbed
+
+    function renderPins() {
+      digitalField.innerHTML = '';
+      for(let i=0; i < totalPins; i++) {
+        const pin = document.createElement('div');
+        pin.classList.add('pin');
+        if(pinStates[i]) pin.classList.add('grabbed');
+        pin.textContent = i+1;
+        pin.title = pinStates[i] ? 'Grabbed' : 'Free';
+        pin.addEventListener('click', () => {
+          pinStates[i] = !pinStates[i];
+          renderPins();
+          updateFieldScore();
+        });
+        digitalField.appendChild(pin);
+      }
+    }
+
+    function updateFieldScore() {
+      const grabbedCount = pinStates.filter(s => s).length;
+      fieldScoreDisplay.textContent = `Current Field Score: ${grabbedCount}`;
+    }
+
+    resetFieldBtn.addEventListener('click', () => {
+      pinStates.fill(false);
+      renderPins();
+      updateFieldScore();
+    });
+
+    // Initial render
+    renderPins();
+    updateFieldScore();
+
   </script>
+
 </body>
 </html>
+
+

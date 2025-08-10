@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>VEX IQ Mix & Match Score Calculator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 400px;
+      margin: 2rem auto;
+      padding: 1rem;
+      background: #f0f4f8;
+      border-radius: 8px;
+      box-shadow: 0 0 10px #ccc;
+    }
+    label {
+      display: block;
+      margin-top: 1rem;
+    }
+    input[type=number], input[type=checkbox] {
+      margin-top: 0.25rem;
+      font-size: 1rem;
+    }
+    button {
+      margin-top: 1.5rem;
+      padding: 0.75rem;
+      width: 100%;
+      font-size: 1.1rem;
+      cursor: pointer;
+      background-color: #007acc;
+      border: none;
+      color: white;
+      border-radius: 4px;
+    }
+    button:hover {
+      background-color: #005fa3;
+    }
+    #scoreHistory {
+      margin-top: 2rem;
+      padding: 0.5rem;
+      background: white;
+      border-radius: 4px;
+      max-height: 150px;
+      overflow-y: auto;
+      box-shadow: inset 0 0 5px #aaa;
+    }
+    h2 {
+      margin-bottom: 0.5rem;
+      text-align: center;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <h2>VEX IQ Mix & Match Score Calculator</h2>
+
+  <label>
+    Number of objects in small goal (1 point each):
+    <input type="number" id="smallGoalCount" min="0" value="0" />
+  </label>
+
+  <label>
+    Number of objects in tall goal (3 points each):
+    <input type="number" id="tallGoalCount" min="0" value="0" />
+  </label>
+
+  <label>
+    Number of 3-color stacks (5 points each):
+    <input type="number" id="threeColorStacks" min="0" value="0" />
+  </label>
+
+  <label>
+    Number of 2-color stacks (3 points each):
+    <input type="number" id="twoColorStacks" min="0" value="0" />
+  </label>
+
+  <label>
+    Number of stack bonuses (2 points each):
+    <input type="number" id="stackBonusCount" min="0" value="0" />
+  </label>
+
+  <label style="margin-top: 1rem;">
+    <input type="checkbox" id="autoBonus" />
+    Autonomous Bonus (10 points)
+  </label>
+
+  <button id="calculateBtn">Calculate Score</button>
+
+  <div id="result" style="margin-top:1.5rem; font-size:1.3rem; font-weight:bold; color:#007acc;"></div>
+
+  <div id="scoreHistory">
+    <h3>Score History:</h3>
+    <ul id="historyList"></ul>
+  </div>
+
+  <script>
+    const calculateBtn = document.getElementById('calculateBtn');
+    const resultDiv = document.getElementById('result');
+    const historyList = document.getElementById('historyList');
+
+    const POINTS = {
+      smallGoal: 1,
+      tallGoal: 3,
+      threeColorStack: 5,
+      twoColorStack: 3,
+      stackBonus: 2,
+      autonomousBonus: 10
+    };
+
+    let scores = [];
+
+    calculateBtn.addEventListener('click', () => {
+      const smallGoalCount = Number(document.getElementById('smallGoalCount').value);
+      const tallGoalCount = Number(document.getElementById('tallGoalCount').value);
+      const threeColorStacks = Number(document.getElementById('threeColorStacks').value);
+      const twoColorStacks = Number(document.getElementById('twoColorStacks').value);
+      const stackBonusCount = Number(document.getElementById('stackBonusCount').value);
+      const autoBonusChecked = document.getElementById('autoBonus').checked;
+
+      if ([smallGoalCount, tallGoalCount, threeColorStacks, twoColorStacks, stackBonusCount].some(v => v < 0 || isNaN(v))) {
+        alert('Please enter valid non-negative numbers for all fields.');
+        return;
+      }
+
+      let totalScore = 0;
+      totalScore += smallGoalCount * POINTS.smallGoal;
+      totalScore += tallGoalCount * POINTS.tallGoal;
+      totalScore += threeColorStacks * POINTS.threeColorStack;
+      totalScore += twoColorStacks * POINTS.twoColorStack;
+      totalScore += stackBonusCount * POINTS.stackBonus;
+      if (autoBonusChecked) totalScore += POINTS.autonomousBonus;
+
+      resultDiv.textContent = `🏆 Total Score: ${totalScore}`;
+
+      scores.push(totalScore);
+      updateHistory();
+    });
+
+    function updateHistory() {
+      historyList.innerHTML = '';
+      scores.forEach((score, index) => {
+        const li = document.createElement('li');
+        li.textContent = `Round ${index + 1}: ${score} points`;
+        historyList.appendChild(li);
+      });
+    }
+  </script>
+</body>
+</html>
